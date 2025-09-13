@@ -101,6 +101,13 @@ if __name__ == '__main__':
         # Get the CV data that we need to convert to json
         text = extract_text_from_upload(uploaded_file)
 
+        # New: Text box for user to specify changes/additions
+        user_edit_instructions = st.text_area(
+            "What would you like to change or add in your resume? (e.g., add education, experience, project, certification, award, skill, etc.)",
+            placeholder="Describe what you want to change or add...",
+            height=80
+        )
+
         if len(text) < 50:
             st.warning("The text extracted from the uploaded file is too short. Are you sure this is the correct file?",
                        icon="⚠️")
@@ -126,11 +133,18 @@ if __name__ == '__main__':
 
         if generate_button:
             try:
+                # Integrate user instructions into the LLM prompt
+                input_text = text
+                if user_edit_instructions.strip():
+                    # Prepend or append the instructions to the text for tailoring
+                    input_text = (
+                        f"User instructions for resume changes: {user_edit_instructions.strip()}\n\n{text}"
+                    )
                 if improve_check:
                     with st.spinner("Tailoring the resume"):
-                        text = tailor_resume(text, api_key, api_model, model_type)
+                        input_text = tailor_resume(input_text, api_key, api_model, model_type)
 
-                json_resume = generate_json_resume(text, api_key, api_model, model_type)
+                json_resume = generate_json_resume(input_text, api_key, api_model, model_type)
                 latex_resume = generate_latex(chosen_option, json_resume, section_ordering)
 
                 resume_bytes = render_latex(template_commands[chosen_option], latex_resume)
@@ -163,6 +177,18 @@ if __name__ == '__main__':
                         file_name="resume.json",
                         mime="text/json",
                     )
+
+                # PDF Preview Section
+                st.markdown("---")
+                st.subheader("Resume Preview")
+                try:
+                    import base64
+                    pdf_base64 = base64.b64encode(resume_bytes).decode('utf-8')
+                    pdf_display = f'<iframe src="data:application/pdf;base64,{pdf_base64}" width="100%" height="700px" type="application/pdf"></iframe>'
+                    st.markdown(pdf_display, unsafe_allow_html=True)
+                except Exception as e:
+                    st.warning("Could not display PDF preview.")
+                    st.write(e)
             except openai.RateLimitError as e:
                 st.markdown(
                     "It looks like you do not have OpenAI API credits left. Check [OpenAI's usage webpage for more information](https://platform.openai.com/account/usage)"
