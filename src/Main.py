@@ -14,7 +14,7 @@ def select_llm_model():
     model_type = st.selectbox(
         "Select the model you want to use:",
         ["OpenAI", "Gemini", "Self-Hosted"],
-        index=0
+        index=1
     )
     return model_type
 
