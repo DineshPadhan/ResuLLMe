@@ -13,20 +13,20 @@ resumes to be more brief and convincing according to the Resumes and Cover Lette
 """
 
 TAILORING_PROMPT = """
-Consider the following CV:
-<CV_TEXT>
+    Consider the following CV:
+    <CV_TEXT>
 
-Your task is to rewrite the given CV. Follow these guidelines:
-- Be truthful and objective to the experience listed in the CV
-- Be specific rather than general
-- Rewrite job highlight items using STAR methodology (but do not mention STAR explicitly)
-- Fix spelling and grammar errors
-- Write to express not impress
-- Articulate and don't be flowery
-- Prefer active voice over passive voice
-- Do not include a summary about the candidate
+    Your task is to rewrite the given CV. Follow these guidelines:
+    - Be truthful and objective to the experience listed in the CV
+    - Be specific rather than general
+    - Rewrite job highlight items using STAR methodology (but do not mention STAR explicitly)
+    - Fix spelling and grammar errors
+    - Write to express not impress
+    - Articulate and don't be flowery
+    - Prefer active voice over passive voice
+    - Do not include a summary about the candidate
 
-Improved CV:
+    Improved CV:
 """
 
 BASICS_PROMPT = """
