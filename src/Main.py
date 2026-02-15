@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit_ext as ste
 import os
 import openai
+from openai import OpenAIError
 
 from doc_utils import extract_text_from_upload
 from templates import generate_latex, template_commands
@@ -20,6 +21,8 @@ def select_llm_model():
 
 
 def get_llm_model_and_api(model_type):
+    api_key = None
+
     if model_type == "OpenAI":
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
@@ -41,15 +44,14 @@ def get_llm_model_and_api(model_type):
             )
         api_model = "gemini-2.0-flash"
     else:
-        if os.getenv("GEMINI_API_KEY"):
-            api_key = os.getenv("GEMINI_API_KEY")
-        elif os.getenv("OPENAI_API_KEY"):
-            api_key = os.getenv("OPENAI_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
+
         if not api_key:
             api_key = st.text_input(
                 "Enter the self-hosted API key: [(Most times you can just write random text)]",
-                    type="password",
+                type="password",
             )
+
         # Use Ollama API as default
         location = "http://127.0.0.1:11434/v1"
         location = st.text_input(
@@ -60,15 +62,24 @@ def get_llm_model_and_api(model_type):
         try:
             client = openai.OpenAI(base_url=location, api_key=api_key)
             model_list = [model.id for model in client.models.list()]
-        except:
+        except OpenAIError as exc:
             st.markdown(
                 "The current API key or location is incorrect. Please try again."
             )
-        api_model = st.selectbox(
-            "Select a model to use for the LLMs:",
-            model_list,
-            index=0
-        )
+            st.caption(str(exc))
+
+        if not model_list:
+            st.warning(
+                "No models were returned by the self-hosted API. Please verify the API endpoint and key.",
+                icon="⚠️",
+            )
+            api_model = ""
+        else:
+            api_model = st.selectbox(
+                "Select a model to use for the LLMs:",
+                model_list,
+                index=0
+            )
     return api_key, api_model
 
 
@@ -133,6 +144,10 @@ if __name__ == '__main__':
 
         if generate_button:
             try:
+                if not api_key or not api_model:
+                    st.error("Please provide a valid API key and select a valid model before generating a resume.")
+                    st.stop()
+
                 # Integrate user instructions into the LLM prompt
                 input_text = text
                 if user_edit_instructions.strip():

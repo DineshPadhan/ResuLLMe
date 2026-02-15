@@ -49,13 +49,28 @@ def render_latex(latex_command, latex_data):
         tectonic_env["TECTONIC_CACHE_DIR"] = f"{str(cache_dir)}/tectonic_cache"
 
         # run latex command
-        latex_process = subprocess.Popen(
-            latex_command_conda, cwd=tmpdirname, env=tectonic_env,
+        latex_process = subprocess.run(
+            latex_command_conda,
+            cwd=tmpdirname,
+            env=tectonic_env,
+            capture_output=True,
+            text=True,
         )
-        latex_process.wait()
+
+        if latex_process.returncode != 0:
+            stderr_output = latex_process.stderr.strip() or latex_process.stdout.strip()
+            raise RuntimeError(
+                "Failed to render resume PDF with Tectonic. "
+                f"Exit code: {latex_process.returncode}. "
+                f"Details: {stderr_output[:1500]}"
+            )
+
+        pdf_path = f"{tmpdirname}/resume.pdf"
+        if not os.path.exists(pdf_path):
+            raise RuntimeError("Tectonic completed without errors but resume.pdf was not generated.")
 
         # read pdf data
-        with open(f"{tmpdirname}/resume.pdf", "rb") as f:
+        with open(pdf_path, "rb") as f:
             pdf_data = f.read()
 
     return pdf_data
