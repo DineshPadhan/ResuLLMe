@@ -28,7 +28,7 @@ def render_latex(latex_command, latex_data):
         shutil.copytree(src_path, tmpdirname, dirs_exist_ok=True)
 
         # write latex data to a file
-        with open(f"{tmpdirname}/resume.tex", "w") as f:
+        with open(f"{tmpdirname}/resume.tex", "w", encoding="utf-8") as f:
             f.write(latex_data)
         
         latex_command_conda = [c for c in latex_command]
